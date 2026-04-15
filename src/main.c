@@ -16,8 +16,10 @@ int main(int argc, char *argv[]) {
     realpath(argv[1], state->lower_dir);
     realpath(argv[2], state->upper_dir);
 
-    // shift args so FUSE gets correct arguments
-    argv[1] = argv[3];   // mountpoint becomes argv[1]
+    // prepare FUSE args: program + mountpoint
+    char *fuse_argv[2];
+    fuse_argv[0] = argv[0];
+    fuse_argv[1] = argv[3];
 
-    return fuse_main(argc - 2, argv, &unionfs_oper, state);
+    return fuse_main(2, fuse_argv, &unionfs_oper, state);
 }

@@ -6,8 +6,10 @@ extern int unionfs_readdir(const char *, void *, fuse_fill_dir_t,
 extern int unionfs_open(const char *, struct fuse_file_info *);
 extern int unionfs_read(const char *, char *, size_t, off_t, struct fuse_file_info *);
 extern int unionfs_write(const char *, const char *, size_t, off_t, struct fuse_file_info *);
+extern int unionfs_release(const char *, struct fuse_file_info *);
 extern int unionfs_create(const char *, mode_t, struct fuse_file_info *);
 extern int unionfs_unlink(const char *); 
+extern int unionfs_truncate(const char *, off_t, struct fuse_file_info *);
 
 struct fuse_operations unionfs_oper = {
     .getattr = unionfs_getattr,
@@ -15,6 +17,8 @@ struct fuse_operations unionfs_oper = {
     .open    = unionfs_open,
     .read    = unionfs_read,
     .write   = unionfs_write,
+    .release = unionfs_release,
     .create  = unionfs_create,
-    .unlink  = unionfs_unlink
+    .unlink  = unionfs_unlink,
+    .truncate = unionfs_truncate,
 };

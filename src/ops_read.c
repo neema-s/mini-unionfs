@@ -5,11 +5,13 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdio.h>
 
 int unionfs_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi) {
+    printf("GETATTR: %s\n", path);
     char resolved[PATH_MAX];
     int layer;
-
+    printf("GETATTR: %s\n", path);
     int res = resolve_path(path, resolved, &layer);
     if (res != 0) return res;
 
@@ -93,5 +95,6 @@ if (dp) {
     }
     closedir(dp);
 }
+return 0;
                     }
                 

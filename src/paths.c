@@ -33,28 +33,27 @@ void get_whiteout_path(const char *path, char *buf) {
 int resolve_path(const char *path, char *resolved, int *layer) {
 
     char upper[PATH_MAX], lower[PATH_MAX];
+    struct stat st;
 
     get_upper_path(path, upper);
     get_lower_path(path, lower);
 
-    // 🔴 SIMPLE WHITEOUT CHECK (MATCHES unlink)
-    char *name = strrchr(path, '/');
-    name = name ? name + 1 : (char*)path;
-
     char wh[PATH_MAX];
-    snprintf(wh, PATH_MAX, "%s/.wh.%s",
-             UNIONFS_DATA->upper_dir, name);
+    get_whiteout_path(path, wh);
 
-    if (access(wh, F_OK) == 0)
+    // check whiteout
+    if (lstat(wh, &st) == 0)
         return -ENOENT;
 
-    if (access(upper, F_OK) == 0) {
+    // check upper
+    if (lstat(upper, &st) == 0) {
         strcpy(resolved, upper);
         *layer = LAYER_UPPER;
         return 0;
     }
 
-    if (access(lower, F_OK) == 0) {
+    // check lower
+    if (lstat(lower, &st) == 0) {
         strcpy(resolved, lower);
         *layer = LAYER_LOWER;
         return 0;
@@ -74,4 +73,5 @@ int mkdir_p(const char *path, mode_t mode) {
         }
     }
     return mkdir(tmp, mode);
+    return 0;
 }

@@ -5,9 +5,9 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
-
+#include <libgen.h>
+extern int copy_file(const char *, const char *);
 int unionfs_unlink(const char *path) {
-    printf("UNLINK CALLED: %s\n", path);
     char upper[PATH_MAX], lower[PATH_MAX], wh[PATH_MAX];
 
     get_upper_path(path, upper);
@@ -46,7 +46,39 @@ int unionfs_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
     char upper[PATH_MAX];
     get_upper_path(path, upper);
 
-    int fd = open(upper, O_CREAT | O_WRONLY, mode);
+    char temp[PATH_MAX];
+    strcpy(temp, upper);
+    char *dir = dirname(temp);
+    mkdir_p(dir, 0755);
+    int fd = open(upper, fi->flags | O_CREAT, mode);
+    if (fd < 0) return -errno;
+
     fi->fh = fd;
     return 0;
 }
+int unionfs_truncate(const char *path, off_t size, struct fuse_file_info *fi) {
+    char resolved[PATH_MAX], upper[PATH_MAX];
+    int layer;
+
+    int res = resolve_path(path, resolved, &layer);
+    if (res != 0) return res;
+
+    if (layer == LAYER_LOWER) {
+    get_upper_path(path, upper);
+
+    char temp[PATH_MAX];
+    strcpy(temp, upper);
+    char *dir = dirname(temp);
+    mkdir_p(dir, 0755);
+
+    if (access(upper, F_OK) != 0) {
+        int ret = copy_file(resolved, upper);
+        if (ret != 0) return ret;
+    }
+
+    strcpy(resolved, upper);
+}
+
+    return truncate(resolved, size);
+}
+
